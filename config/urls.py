@@ -8,7 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # path('api/docs/schema' , SpectacularAPIView.as_view(), name='schema'),
     # path('api/docs/schema/ui' , SpectacularSwaggerView.as_view()),
-    # path('core/', include("core.urls")),
+    path('api/core/', include("core.urls")),
 ] 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root= settings.MEDIA_ROOT)
