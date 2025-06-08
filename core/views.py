@@ -16,10 +16,7 @@ class LoginRegesterApiView(views.APIView):
         if not password:
             return Response({'detail':"پسورد  نمیتواند خالی باشد"},status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            user = User.objects.get(phone=phone)
-        except User.DoesNotExist:
-            return Response({'detail':"user not found!!"},status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.filter(phone=phone).first()
         
         if user:
             if not user.check_password(password):
