@@ -43,5 +43,15 @@ class LoginRegesterApiView(views.APIView):
             "access": str(refresh.access_token),
             "message": "کاربر با موفقیت ثبت نام کرد" if not user_exist else "ورود موفقیت‌آمیز"
         }, status=status.HTTP_200_OK)
+    
+
+class RefreshTokenApiview(views.APIView):
+    def post(self,request):
+        refresh = request.data.get('refresh')
+        
+        if not refresh:
+            return Response({'detail':" رفرش نمیتواند خالی باشد"},status=status.HTTP_400_BAD_REQUEST)
+
+        
                         
 
