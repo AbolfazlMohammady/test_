@@ -49,6 +49,16 @@ class LoginRegesterApiView(APIView):
             "access": str(refresh.access_token),
             "message": "کاربر با موفقیت ثبت نام کرد" if not user_exist else "ورود موفقیت‌آمیز"
         }, status=status.HTTP_200_OK)
+    
+
+class RefreshTokenApiview(views.APIView):
+    def post(self,request):
+        refresh = request.data.get('refresh')
+        
+        if not refresh:
+            return Response({'detail':" رفرش نمیتواند خالی باشد"},status=status.HTTP_400_BAD_REQUEST)
+
+        
                         
 
 class RefreshTokenApi(APIView):
@@ -87,3 +97,69 @@ class RefreshTokenApi(APIView):
                 {"error": "Invalid or expired refresh token"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+        
+class ProfileApiViewSet(ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def retrieve(self, request):
+        try:
+            queryset = User.objects.get(pk=request.user.id)
+        except User.DoesNotExist:
+            return Response({'detail': 'User not found'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ProfileSerializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+    def update(self, request):
+        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, method=['post'], permission_classes=[permissions.IsAuthenticated])
+    def change_password(self, request):
+        user = request.user
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not old_password or not new_password:
+            return Response(
+                {'detail': 'هردو فیلد رمز عبور قدیمی و رمز عبور جدید لازم هستند'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if check_password(old_password, request.user):
+            return Response(
+                {'detail': 'رمز عبور قدیمی اشتباه است.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save()
+        return Response(
+            {'detail': 'رمز عبور با موفقیت تغییر کرد'},
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, method=['post'], permission_classes=permissions.IsAuthenticated)
+    def delete_account(self, request):
+        user = request.user
+        confirm = user.date.get('confirm')
+
+        if not confirm != 'yes':
+            return Response(
+                {'detail': 'برای حذف این حساب باید تایید کنید'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.is_active=False
+        user.save()
+        return Response(
+            {'detail': 'حساب کاربری با موفقیت حذف شد'},
+            status=status.HTTP_200_OK
+        )
